@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+loguru
+redis
+python-jose
+configparser
+pytest
+httpx
+boto3
+respx

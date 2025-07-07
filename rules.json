@@ -1,0 +1,6 @@
+{
+  "salesforce": {
+    "required_fields": ["email"],
+    "disallow_if": {"do_not_sync": true}
+  }
+}
