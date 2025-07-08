@@ -11,7 +11,7 @@ It provides:
 * Reliable near-real-time synchronization
 * Extensible support for multiple CRMs
 * Robust error handling
-* Dynamic rules-based decision making
+* Dynamic rules-based decision-making
 * Pluggable data transformations
 * Rate-limit awareness
 * Queue/buffer mechanisms to throttle external calls
@@ -19,19 +19,10 @@ It provides:
 
 The service is designed for high scale (300 million records/day) with 99.9% availability targets.
 
-Architecture
-pgsql
-Copy
-Edit
-System A
-   |
-   | (API Key)
-   v
-Record Sync Service
-   |
-   | (JWT or OAuth to System B)
-   v
-System B (CRM)
+### Architecture
+
+System A  <-----(`API Key`)---->  Record Sync Service  <---(`JWT`)--> System B (CRM)
+
 
 ## 2. Key components:
 
@@ -62,6 +53,9 @@ System B (CRM)
 - No data loss guarantee through retries and idempotency
 
 ## 3. Technology Choices
+
+✅ Python 3.10
+
 ✅ FastAPI
 
 - async-native, high concurrency
@@ -113,32 +107,25 @@ System B (CRM)
 
 ## 5. High-Level Flow
 
-1. System A sends a sync request to POST /v1/sync/
+- System A sends a sync request to POST `/v1/sync/`
 
-2. The RulesEngine evaluates whether to proceed based on preconfigured rules (required fields, disallowed fields, etc.)
-- If permitted, the record is queued
+- The RulesEngine evaluates whether to proceed based on preconfigured rules (required fields, disallowed fields, etc.)
+  - If permitted, the record is queued
 
-3. Queue Manager periodically flushes batches
+- Queue Manager periodically flushes batches
 
-4. Rate limiter ensures CRM API limits are respected and controls how many records per minute flush
+- Rate limiter ensures CRM API limits are respected and controls how many records per minute flush
 
-5. CRM plugin (transform() + push()) pushes data to external CRM
-6. CRM plugin uses JWT to push to System B 
-7. Transform maps fields from System A to CRM 
-
-8. Status is tracked and updated (queued, synced, failed, etc.)
-
-9. Retries are scheduled if a transient failure happens. Retry manager handles retries with backoff
-
-10. Manual retries can be triggered
-
-11. All events logged for observability
-
-12. All logs are JSON structured
-
-13. Rules can be edited dynamically via the /v1/sync/rules endpoint
-
-14. Configs can be overridden dynamically via /v1/sync/config-override
+- CRM plugin (transform() + push()) pushes data to external CRM 
+- CRM plugin uses JWT to push to System B 
+- Transform maps fields from System A to CRM 
+- Status is tracked and updated (queued, synced, failed, etc.)
+- Retries are scheduled if a transient failure happens. Retry manager handles retries with backoff 
+- Manual retries can be triggered 
+- All events logged for observability 
+- All logs are JSON structured 
+- Rules can be edited dynamically via the `/v1/sync/rules` endpoint 
+- Configs can be overridden dynamically via `/v1/sync/config-override`
 
 ## 6. API Design
 | Method | Endpoint | Purpose |
@@ -150,159 +137,130 @@ System B (CRM)
 |POST	|/v1/sync/rules|	Dynamically update sync rules (without S3)
 
 ## 7. Rules Engine
-Supports dynamic rule updates via the API (/v1/sync/rules)
 
-Example rules:
+* evaluated on each sync request
+* rules defined in rules.json
+* supports required fields and disallowed conditions
+* Supports dynamic rule updates via the API (`/v1/sync/rules`)
+* Future
+  * Rules.json can be pulled from S3 and rules_engine_s3.py provides interfaces to pull rules from S3
+  * Can easily be moved to Postgres for durability later
 
-required fields (e.g. “email” must exist)
 
-disallow if a flag like do_not_sync is set
+## 8. Transform Layer
 
-Rules are stored in memory and also persisted to rules.json
+- Each CRM plugin provides a transform() method
+- Maps internal schema fields to the CRM’s expected fields
+- Example: first_name → FirstName for Salesforce 
+- This is flexible and future-proof, supporting:
+  - new fields 
+  - versioned CRM APIs 
+  - schema migrations
 
-No dependency on S3 (simpler, safer)
+## 9. Rate Limiting
 
-Can easily be moved to Postgres for durability later
+- Sliding window algorithm per CRM 
+- Flushes queued records in controlled batches 
+- Each CRM has :
+  - configurable `batch_size`
+  - configurable `flush_interval`
+  - configurable `rate_limit_per_minute`
 
-Transform Layer
-Each CRM plugin provides a transform() method
+- Dynamic override API supports changing the CRM rate limiting configs at runtime
 
-Maps internal schema fields to the CRM’s expected fields
 
-Example: first_name → FirstName for Salesforce
+## 10. Retry and Circuit Breaker
+- transient failures retried 3 times 
+- exponential backoff with Tenacity 
+- circuit breaker: prevents flooding CRM on repeat failures 
+- manual retry endpoint for user-triggered reattempt for on demand retries.
+- permanent validation errors (missing required field, etc.) are not retried
 
-This is flexible and future-proof, supporting:
+## 11. Status Tracking
+ - StatusManager tracks status of each record in memory
 
-new fields
+ - Can easily migrate to Postgres later
 
-versioned CRM APIs
+ - Provides a GET `/v1/sync/status/{record_id}` to inspect 
+   - queued 
+   - synced 
+   - failed 
+   - skipped_by_rule
 
-schema migrations
+## 12. Observability
 
-Rate Limiting
-Sliding window algorithm per CRM
+- Structured JSON logs via Loguru
 
-Flushes queued records in controlled batches
+- Logs written to file and console
 
-Each CRM has configurable:
+- Easily ingestible by CloudWatch, ELK, or Splunk
 
-batch_size
+- Stats can be exported to metrics if needed
 
-flush_interval
+- Hooks for OpenTelemetry tracing ready to add
 
-rate_limit_per_minute
+## 13. Dynamic Config
+ - ConfigManager uses config.ini to load defaults
 
-Dynamic override API supports changing these at runtime
+- `/v1/sync/config-override` API lets you change:
+  - batch_size 
+  - flush_interval 
+  - rate limits 
+  - API hosts
 
-Error Handling & Retries
-transient failures retried up to 3 attempts (Tenacity)
+- New configs are stored in memory
 
-circuit breaker pattern to stop repeated failures
+- A new batch will pick them up
 
-permanent validation errors (e.g. missing required field) do not retry
+## 14. Scaling Considerations
+ - 300 million records/day target
+- horizontally scalable FastAPI containers on ECS Fargate
+- Redis cluster Can be integrated to handle massive throughput
+- RDS Postgres can be considered for durable metadata 
+- CloudWatch for metrics/alarms 
+- SecretManager  Store for secure secrets 
+- LB in front of FastAPI 
+- SQS could also be plugged for decoupling 
+- Kinesis/Kafka if event fan-out is needed
 
-manual retries available on demand
+## 15. Security
 
-logs every attempt for audit
+- Internal System A authenticates using API keys
 
-Status Tracking
-StatusManager tracks status of each record in memory
+- record_sync_service authenticates to CRM via JWT (or OAuth)
 
-Can easily migrate to Postgres later
+- Rules update API should be protected with a strong admin API key or OAuth (planned)
+- Config override also to be protected
+- No sensitive secrets in code
 
-Provides a GET /v1/sync/status/{record_id} to inspect
+## 16. Extensibility
 
-queued
-
-synced
-
-failed
-
-skipped_by_rule
-
-Observability
-Structured JSON logs via Loguru
-
-Logs written to file and console
-
-Easily ingestible by CloudWatch, ELK, or Splunk
-
-Stats can be exported to metrics if needed
-
-Hooks for OpenTelemetry tracing ready to add
-
-Dynamic Config
-ConfigManager uses config.ini to load defaults
-
-/v1/sync/config-override API lets you change:
-
-batch_size
-
-flush_interval
-
-rate limits
-
-API hosts
-
-New configs are stored in memory
-
-A new batch will pick them up
-
-Scaling Considerations
-300 million records/day target
-
-horizontally scalable FastAPI containers on ECS Fargate
-
-Redis cluster to handle massive throughput
-
-RDS Postgres for durable metadata
-
-CloudWatch for metrics/alarms
-
-SSM Parameter Store for secure secrets
-
-ALB in front of FastAPI
-
-SQS could also be plugged for decoupling
-
-Kafka if event fan-out is needed
-
-Security
-Internal System A authenticates using API keys
-
-record_sync_service authenticates to CRM via JWT (or OAuth)
-
-Rules update API should be protected with a strong admin API key or OAuth (planned)
-
-Config override also to be protected
-
-No sensitive secrets in code
-
-Extensibility
 Adding a new CRM:
+- create a new MyCRM subclass of BaseCRM
 
-create a new MyCRM subclass of BaseCRM
+- define:
 
-define:
+  - identify()
+  - transform()
+  - push()
 
-identify()
+- register in SyncManager
 
-transform()
+- done!
 
-push()
+## 17. Trade-offs
 
-register in SyncManager
-
-done!
-
-Trade-offs
 ✅ Chose single sync endpoint:
 
-easier batching
+- Why you don’t see explicit CRUD?
+  - explicit CRUD routes would be more RESTful but harder to batch
+  - In the code so far, the operation field on the sync requests carries the CRUD intention (create, read, update, delete) — but did not explicitly break them into separate routes, because “single sync endpoint” pattern is being followed that takes the operation type in the payload and then applies a transformation.
+  
+- easier batching
 
-simpler idempotency
+- simpler idempotency
 
-fewer routing changes if new operations arise
+- fewer routing changes if new operations arise
 
 ✅ Separate CRUD routes would add discoverability, but reduce batching benefits
 → event-driven is better here
@@ -321,59 +279,50 @@ in-memory, super fast
 
 but you need persistence if you truly cannot lose records (append to disk or use Redis Streams in prod)
 
-Testing & Quality
-pytest test suite included
+## 18. Testing & Quality
 
-black + isort for formatting
+- `pytest` test suite included
 
-strong Pydantic typing
+- black + isort for consistent formatting
 
-Dockerized
+- strong Pydantic typing and type-annotated everywhere
+- environment driven for secrets 
+- logs show clear queue/batch/flush actions
+- rate limiter tested
 
-clear, well-separated module structure
+  ### Dockerized
+  - Entire code is properly dockerized to ease the execution.
+  - clear, well-separated module structure
 
-environment driven for secrets
 
-logs show clear queue/batch/flush actions
+## 19. Commands
 
-rate limiter tested
+  ### How to Run
 
-How to Run
-bash
-Copy
-Edit
-make run
-How to Test
-bash
-Copy
-Edit
-make test
-How to Build Docker
-bash
-Copy
-Edit
-docker build -t record-sync .
-docker run -p 8000:8000 record-sync
-Future Improvements
-✅ persist rules to Postgres instead of a local file
-✅ add a feature flag system (e.g. LaunchDarkly)
-✅ better observability with Prometheus + Grafana
-✅ move to Redis Streams for ordered queues
-✅ allow multi-tenant CRM logic
-✅ schema-driven transforms via JSON schemas instead of code
-✅ integrate KMS for secret encryption
+  > make run
+  ### How to Test
 
-🚀 Conclusion
-This design is production-grade, highly extensible, observable, and easy to scale. It fits a Staff-level engineering exercise with a modern, microservice, event-driven architecture, applying:
+  > make test
+  ### How to Build Docker
 
-best practices (patterns, error handling, rate limiting)
+  >docker build -t record-sync . \
+  docker run -p 8000:8000 record-sync
 
-clean, type-safe API contracts
+## 20. Future Improvements
 
-clear decoupling
+✅ persist rules to Postgres instead of a local file \
+✅ add a feature flag system (e.g. LaunchDarkly) \
+✅ better observability with Prometheus + Grafana \
+✅ move to Redis Streams for ordered queues \
+✅ allow multi-tenant CRM logic \
+✅ schema-driven transforms via JSON schemas instead of code \
+✅ integrate KMS for secret encryption 
 
-clean paths for future enhancements
+## 21. 🚀 Conclusion
 
-It is ready for real-world CRM sync workloads today, and flexible for tomorrow. ✅
+This design is production-grade, highly extensible, observable, and easy to scale. It fits a Staff-level engineering exercise with a modern, microservice, event-driven architecture, applying: 
+ - best practices (patterns, error handling, rate limiting)
+ - clean, type-safe API contracts 
+ - clear decoupling 
+ - clean paths for future enhancements
 
-End of document
