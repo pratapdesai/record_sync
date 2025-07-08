@@ -298,15 +298,19 @@ but you need persistence if you truly cannot lose records (append to disk or use
 ## 19. Commands
 
   ### How to Run
-
-  > make run
+  ```
+  make run
+  ```
   ### How to Test
 
-  > make test
+  ```
+  make test
+  ```
   ### How to Build Docker
-
-  >docker build -t record-sync . \
+  ```
+  docker build -t record-sync .
   docker run -p 8000:8000 record-sync
+  ```
 
 ## 20. Future Improvements
 

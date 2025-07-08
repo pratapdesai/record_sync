@@ -6,6 +6,7 @@ import httpx
 
 class OutreachCRM(BaseCRM):
     def __init__(self, config):
+        super().__init__(config)
         self.config = config
         self.circuit_breaker = CircuitBreaker(
             failure_threshold=5,
@@ -46,6 +47,22 @@ class OutreachCRM(BaseCRM):
             logger.error(f"Mock Outreach push failed: {e}")
             self.circuit_breaker.record_failure()
             raise
+
+    async def fetch_recent_changes(self, since_timestamp):
+        logger.info(f"Fetching Outreach changes since {since_timestamp.isoformat()}")
+
+        return [
+            {
+                "operation": "create",
+                "record_id": "rec_outreach_001",
+                "data": {
+                    "first_name": "Emily",
+                    "email": "emily@ot.com",
+                    "account_id": "ACC-OT-7"
+                },
+                "crm": "outreach"
+            }
+        ]
 
     # ACTUAL PUSH TO OUTREACH
     # async def push(self, data: dict):

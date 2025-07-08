@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from app.api.v1 import sync
 from app.core.logger import logger
-from app.services.poller import SalesforcePoller
+from app.services.poller import CommonCRMPoller
 from app.services.sync_manager import SyncManager
 import asyncio
 
 sync_manager = SyncManager()
-poller = SalesforcePoller(sync_manager)
+poller = CommonCRMPoller(sync_manager)
 
 app = FastAPI(
     title="Record Sync Service",
@@ -19,8 +19,8 @@ app.include_router(sync.router, prefix="/v1/sync", tags=["sync"])
 
 @app.on_event("startup")
 async def startup_event():
-    await asyncio.create_task(poller.poll_loop())
     logger.info("Record Sync Service is starting up...")
+    await asyncio.create_task(poller.poll_loop())
 
 @app.on_event("shutdown")
 async def shutdown_event():

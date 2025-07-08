@@ -5,6 +5,7 @@ from app.utils.circuit_breaker import CircuitBreaker
 
 class SalesforceCRM(BaseCRM):
     def __init__(self, config):
+        super().__init__(config)
         self.config = config
         self.circuit_breaker = CircuitBreaker(
             failure_threshold=5,
@@ -52,11 +53,11 @@ class SalesforceCRM(BaseCRM):
         return [
             {
                 "operation": "update",
-                "record_id": "rec12345",
+                "record_id": "rec_salesforce_123",
                 "data": {
                     "first_name": "PolledFirst",
-                    "email": "poll@example.com",
-                    "account_id": "ACC12345"
+                    "email": "poll@sf.com",
+                    "account_id": "ACC-SF-1"
                 },
                 "crm": "salesforce"
             }

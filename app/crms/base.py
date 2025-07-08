@@ -3,6 +3,9 @@ from jose import jwt
 
 
 class BaseCRM(ABC):
+    def __init__(self, config):
+        self.config = config
+
     @abstractmethod
     async def push(self, data: dict):
         pass
@@ -18,3 +21,9 @@ class BaseCRM(ABC):
     def _get_jwt_token(self) -> str:
         return "mocked-jwt-token"
         # return jwt.encode({"iss": "record_sync"}, self.secret, algorithm="HS256")
+
+    async def fetch_recent_changes(self, since_timestamp):
+        """
+        Optional: Implement this in subclasses that support pulling.
+        """
+        raise NotImplementedError("This CRM does not support polling.")

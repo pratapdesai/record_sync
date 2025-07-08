@@ -5,17 +5,20 @@ from app.core.logger import logger
 from app.models.config import ConfigOverride
 from pydantic import BaseModel
 from typing import Literal
-from app.services.poller import SalesforcePoller
+from app.services.poller import CommonCRMPoller
 
 router = APIRouter()
 sync_manager = SyncManager()
 config_service = ConfigService()
-poller = SalesforcePoller(sync_manager)
+poller = CommonCRMPoller(sync_manager)
+
+
 class SyncRequest(BaseModel):
     operation: Literal["create", "read", "update", "delete"]
     record_id: str
     data: dict
     crm: str
+
 
 @router.post("/", status_code=status.HTTP_202_ACCEPTED)
 async def sync_record(request: SyncRequest):
@@ -27,6 +30,7 @@ async def sync_record(request: SyncRequest):
         logger.exception("Error accepting sync request")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/retry/{record_id}")
 async def manual_retry(record_id: str):
     try:
@@ -35,6 +39,7 @@ async def manual_retry(record_id: str):
     except Exception as e:
         logger.exception("Error retrying")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/config-override")
 async def override_config(payload: ConfigOverride):
@@ -45,6 +50,7 @@ async def override_config(payload: ConfigOverride):
         logger.exception("Error overriding config")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/status/{record_id}")
 async def get_status(record_id: str):
     try:
@@ -53,6 +59,7 @@ async def get_status(record_id: str):
     except Exception as e:
         logger.exception("Error fetching status")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/rules")
 async def update_rules(request: Request):
@@ -64,11 +71,12 @@ async def update_rules(request: Request):
         logger.exception("Error updating rules")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/poll/salesforce")
-async def manual_poll_salesforce():
+
+@router.post("/poll/{crm}")
+async def manual_poll_crm(crm: str):
     try:
-        await poller.poll_once()
-        return {"message": "Salesforce poll triggered manually."}
+        await poller.poll_once(crm)
+        return {"message": f"{crm} poll manually triggered."}
     except Exception as e:
-        logger.error(f"Manual Salesforce poll failed: {e}")
+        logger.error(f"Manual poll failed for {crm}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
