@@ -4,9 +4,13 @@ from app.core.logger import logger
 from app.services.poller import CommonCRMPoller
 from app.services.sync_manager import SyncManager
 import asyncio
+from app.core.loader import load_systems_from_config
+from app.services.orchestrator import SyncOrchestrator
+from app.core.context import context
 
 sync_manager = SyncManager()
 poller = CommonCRMPoller(sync_manager)
+
 
 app = FastAPI(
     title="Record Sync Service",
@@ -20,7 +24,16 @@ app.include_router(sync.router, prefix="/v1/sync", tags=["sync"])
 @app.on_event("startup")
 async def startup_event():
     logger.info("Record Sync Service is starting up...")
-    await asyncio.create_task(poller.poll_loop())
+
+    # Set orchestrator for manual sync route
+    source, sink = load_systems_from_config("sync_config.json")
+    context.orchestrator = SyncOrchestrator(source, sink)
+
+    # Run the CRM poller in background
+    asyncio.create_task(poller.poll_loop())
+
+    # Optionally trigger one sync at boot
+    asyncio.create_task(context.orchestrator.sync_all())
 
 @app.on_event("shutdown")
 async def shutdown_event():

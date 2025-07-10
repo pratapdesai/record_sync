@@ -6,6 +6,8 @@ from app.models.config import ConfigOverride
 from pydantic import BaseModel
 from typing import Literal
 from app.services.poller import CommonCRMPoller
+from app.core.context import context
+from fastapi import Query
 
 router = APIRouter()
 sync_manager = SyncManager()
@@ -80,3 +82,10 @@ async def manual_poll_crm(crm: str):
     except Exception as e:
         logger.error(f"Manual poll failed for {crm}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/manual")
+async def trigger_full_config_sync(allow_duplicates: bool = Query(False, description="Allow duplicate records")):
+    if context.orchestrator is None:
+        raise HTTPException(status_code=500, detail="Orchestrator not initialized.")
+    count = await context.orchestrator.sync_all(allow_duplicates=allow_duplicates)
+    return {"message": f"Manually synced {count} records from System A to System B."}

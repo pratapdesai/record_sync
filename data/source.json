@@ -1,0 +1,26 @@
+[
+  {
+    "record_id": "1",
+    "data": {
+      "first_name": "Alice",
+      "email": "alice@example.com",
+      "last_modified": "2025-07-08T12:00:00"
+    }
+  },
+  {
+    "record_id": "2",
+    "data": {
+      "first_name": "Bob",
+      "email": "bob@example.com",
+      "last_modified": "2025-07-08T12:10:00"
+    }
+  },
+  {
+    "record_id": "3",
+    "data": {
+      "first_name": "Surya",
+      "email": "bob@example.com",
+      "last_modified": "2025-07-08T12:10:00"
+    }
+  }
+]

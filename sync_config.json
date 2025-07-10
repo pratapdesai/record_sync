@@ -1,0 +1,10 @@
+{
+  "system_a": {
+    "type": "file_source",
+    "path": "data/source.json"
+  },
+  "system_b": {
+    "type": "file_sink",
+    "path": "data/sink.json"
+  }
+}
