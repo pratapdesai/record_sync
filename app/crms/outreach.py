@@ -2,8 +2,10 @@ from app.crms.base import BaseCRM
 from app.utils.circuit_breaker import CircuitBreaker
 from app.core.logger import logger
 import httpx
+from app.crms.registry import register_crm
 
 
+@register_crm("outreach")
 class OutreachCRM(BaseCRM):
     def __init__(self, config):
         super().__init__(config)
@@ -12,6 +14,15 @@ class OutreachCRM(BaseCRM):
             failure_threshold=5,
             recovery_timeout=60
         )
+
+    @classmethod
+    def config_schema(cls):
+        return {
+            "client_id": "OAuth client ID",
+            "client_secret": "OAuth client secret",
+            "token_url": "Outreach token endpoint URL",
+            "api_url": "Outreach API base URL"
+        }
 
     def identify(self) -> str:
         return "outreach"

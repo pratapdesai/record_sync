@@ -1,0 +1,11 @@
+{
+  "system_a": {
+    "type": "sqlite_source",
+    "db_path": "data/demo.sqlite",
+    "table": "users"
+  },
+  "system_b": {
+    "type": "salesforce",
+    "crm_key": "salesforce_main"
+  }
+}

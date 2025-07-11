@@ -83,6 +83,7 @@ async def manual_poll_crm(crm: str):
         logger.error(f"Manual poll failed for {crm}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/manual")
 async def trigger_full_config_sync(allow_duplicates: bool = Query(False, description="Allow duplicate records")):
     if context.orchestrator is None:

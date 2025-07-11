@@ -1,0 +1,11 @@
+{
+  "system_a": {
+    "type": "postgres_source",
+    "source_key": "postgres_internal",
+    "table": "users"
+  },
+  "system_b": {
+    "type": "file_sink",
+    "path": "data/sink.json"
+  }
+}

@@ -1,8 +1,17 @@
 from abc import ABC, abstractmethod
-from jose import jwt
+from typing import Dict
 
 
 class BaseCRM(ABC):
+
+    @classmethod
+    @abstractmethod
+    def config_schema(cls) -> Dict[str, str]:
+        """
+        Returns the expected config keys and descriptions.
+        """
+        pass
+
     def __init__(self, config):
         self.config = config
 

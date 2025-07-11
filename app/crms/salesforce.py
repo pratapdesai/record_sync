@@ -1,8 +1,10 @@
 from .base import BaseCRM
 from app.core.logger import logger
 from app.utils.circuit_breaker import CircuitBreaker
+from app.crms.registry import register_crm
 
 
+@register_crm("salesforce")
 class SalesforceCRM(BaseCRM):
     def __init__(self, config):
         super().__init__(config)
@@ -12,6 +14,16 @@ class SalesforceCRM(BaseCRM):
             recovery_timeout=60
         )
         self.secret = "salesforce_secret"
+
+    @classmethod
+    def config_schema(cls):
+        return {
+            "client_id": "OAuth client ID",
+            "client_secret": "OAuth client secret",
+            "auth_url": "Salesforce token endpoint URL",
+            "api_url": "Salesforce API base URL",
+            "private_key": "Private key used for JWT"
+        }
 
     def identify(self) -> str:
         return "salesforce"
