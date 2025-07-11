@@ -6,13 +6,14 @@ router = APIRouter()
 
 @router.get("/available", tags=["CRM"])
 async def list_available_crms():
-    crms = []
-    for name, cls in crm_registry.items():
-        crms.append({
-            "name": name,
-            "schema": cls.config_schema()
-        })
-    return {"supported_crms": crms}
+    # crms = []
+    # for name, cls in crm_registry.items():
+    #     crms.append({
+    #         "name": name,
+    #         "schema": cls.config_schema()
+    #     })
+    # return {"supported_crms": crms}
+    return {"supported_crms": list(crm_registry.keys())}
 
 
 @router.get("/{crm_name}/schema", tags=["CRM"])

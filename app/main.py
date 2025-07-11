@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.v1 import sync
+from app.api.v1 import sync, crm_info
 from app.core.logger import logger
 from app.services.poller import CommonCRMPoller
 from app.services.sync_manager import SyncManager
@@ -20,6 +20,7 @@ app = FastAPI(
 
 # register the router
 app.include_router(sync.router, prefix="/v1/sync", tags=["sync"])
+app.include_router(crm_info.router, prefix="/v1/crms", tags=["crms"])
 
 @app.on_event("startup")
 async def startup_event():
