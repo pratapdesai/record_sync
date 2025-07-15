@@ -1,6 +1,7 @@
 import pytest
 from app.services.queue import QueueManager
 
+
 def test_enqueue_and_flush():
     qm = QueueManager()
     crm = "salesforce"
@@ -10,6 +11,7 @@ def test_enqueue_and_flush():
     batch = qm.flush(crm, batch_size=10)
     assert isinstance(batch, list)
     assert len(batch) >= 0  # flush might leave some items if under batch size
+
 
 def test_multiple_crm_queues():
     qm = QueueManager()

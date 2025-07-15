@@ -8,7 +8,6 @@ import asyncio
 from app.crms.outreach import OutreachCRM
 
 
-
 class SyncManager:
     def __init__(self):
         self.queue = QueueManager()

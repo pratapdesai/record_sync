@@ -1,5 +1,6 @@
 from threading import Lock
 
+
 class StatusManager:
     def __init__(self):
         self.status_store = {}

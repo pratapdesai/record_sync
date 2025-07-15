@@ -1,8 +1,7 @@
 {
   "system_a": {
-    "type": "sqlite_source",
-    "db_path": "data/demo.sqlite",
-    "table": "users"
+    "type": "file_source",
+    "path": "data/source.json"
   },
   "system_b": {
     "type": "file_sink",

@@ -10,3 +10,4 @@ httpx
 boto3
 respx
 pytest-asyncio
+aiosqlite

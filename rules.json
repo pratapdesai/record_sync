@@ -1,6 +1,10 @@
 {
-  "salesforce": {
-    "required_fields": ["email"],
-    "disallow_if": {"do_not_sync": true}
+  "filters": {
+    "status": "active"
+  },
+  "mappings": {
+    "record_id": "record_id",
+    "full_name": "full_name",
+    "email_address": "email_address"
   }
 }

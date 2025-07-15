@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class ConfigOverride(BaseModel):
     crm: str
     batch_size: int

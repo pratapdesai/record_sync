@@ -3,6 +3,7 @@ from app.main import app
 
 client = TestClient(app)
 
+
 def test_sync_create():
     response = client.post("/v1/sync/", json={
         "operation": "create",
@@ -11,6 +12,7 @@ def test_sync_create():
         "crm": "salesforce"
     })
     assert response.status_code == 202
+
 
 def test_override_config():
     response = client.post("/v1/sync/config-override", json={

@@ -3,6 +3,7 @@ import respx
 import httpx
 from app.crms.outreach import OutreachCRM
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_outreach_push_success():
@@ -18,6 +19,7 @@ async def test_outreach_push_success():
         "externalId": "ACC456"
     }
     await crm.push(data)
+
 
 @pytest.mark.asyncio
 @respx.mock

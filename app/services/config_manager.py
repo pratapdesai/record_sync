@@ -2,6 +2,7 @@ from app.core.config import ConfigManager
 from app.models.config import ConfigOverride
 from app.core.logger import logger
 
+
 class ConfigService:
     def __init__(self):
         self.config = ConfigManager.get_instance()

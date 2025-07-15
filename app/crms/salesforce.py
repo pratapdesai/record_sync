@@ -14,6 +14,7 @@ class SalesforceCRM(BaseCRM):
             recovery_timeout=60
         )
         self.secret = "salesforce_secret"
+        self.mock_store = []  # fake in-memory DB
 
     @classmethod
     def config_schema(cls):
@@ -38,7 +39,17 @@ class SalesforceCRM(BaseCRM):
             "AccountId": crm_data.get("account_id")
         }
 
+    # push mock
     async def push(self, data: dict):
+        self.mock_store.append(data)
+        logger.info(f"[Mock Salesforce] Record pushed: {data}")
+
+    # pull mock
+    async def pull(self):
+        logger.info("[Mock Salesforce] Pulling mock data...")
+        return self.mock_store.copy()
+
+    async def push_actual(self, data: dict):
         if not self.circuit_breaker.allow_request():
             logger.warning("Salesforce circuit breaker is OPEN, skipping push")
             raise Exception("Salesforce circuit breaker is OPEN")

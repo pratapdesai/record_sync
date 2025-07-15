@@ -2,6 +2,7 @@ from collections import defaultdict, deque
 from threading import Lock
 from app.core.logger import logger
 
+
 class QueueManager:
     def __init__(self):
         self.queues = defaultdict(deque)

@@ -1,27 +1,11 @@
 [
   {
-    "record_id": "1",
-    "data": {
-      "first_name": "Alice",
-      "email": "alice@example.com",
-      "last_modified": "2025-07-08T12:00:00"
-    }
+    "full_name": "Alice",
+    "email_address": "alice@example.com"
   },
   {
-    "record_id": "2",
-    "data": {
-      "first_name": "Bob",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
-  },
-  {
-    "record_id": "3",
-    "data": {
-      "first_name": "Surya",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
+    "full_name": "Charlie",
+    "email_address": "charlie@example.com"
   },
   {
     "record_id": "1",
@@ -48,99 +32,33 @@
     }
   },
   {
-    "record_id": "1",
-    "data": {
-      "first_name": "Alice",
-      "email": "alice@example.com",
-      "last_modified": "2025-07-08T12:00:00"
-    }
+    "record_id": 1,
+    "name": "Alice",
+    "email": "alice@example.com",
+    "status": "active"
   },
   {
-    "record_id": "2",
-    "data": {
-      "first_name": "Bob",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
+    "record_id": 2,
+    "name": "Bob",
+    "email": "bob@example.com",
+    "status": "active"
   },
   {
-    "record_id": "3",
-    "data": {
-      "first_name": "Surya",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
+    "record_id": 3,
+    "name": "Charlie",
+    "email": "charlie@example.com",
+    "status": "active"
   },
   {
-    "record_id": "1",
-    "data": {
-      "first_name": "Alice",
-      "email": "alice@example.com",
-      "last_modified": "2025-07-08T12:00:00"
-    }
+    "record_id": 4,
+    "name": "Dharani",
+    "email": "dharani@example.com",
+    "status": "active"
   },
   {
-    "record_id": "2",
-    "data": {
-      "first_name": "Bob",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
-  },
-  {
-    "record_id": "3",
-    "data": {
-      "first_name": "Surya",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
-  },
-  {
-    "record_id": "1",
-    "data": {
-      "first_name": "Alice",
-      "email": "alice@example.com",
-      "last_modified": "2025-07-08T12:00:00"
-    }
-  },
-  {
-    "record_id": "2",
-    "data": {
-      "first_name": "Bob",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
-  },
-  {
-    "record_id": "3",
-    "data": {
-      "first_name": "Surya",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
-  },
-  {
-    "record_id": "1",
-    "data": {
-      "first_name": "Alice",
-      "email": "alice@example.com",
-      "last_modified": "2025-07-08T12:00:00"
-    }
-  },
-  {
-    "record_id": "2",
-    "data": {
-      "first_name": "Bob",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
-  },
-  {
-    "record_id": "3",
-    "data": {
-      "first_name": "Surya",
-      "email": "bob@example.com",
-      "last_modified": "2025-07-08T12:10:00"
-    }
+    "record_id": 5,
+    "name": "FFFFF",
+    "email": "ff@example.com",
+    "status": "active"
   }
 ]

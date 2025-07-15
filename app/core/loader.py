@@ -3,8 +3,6 @@ import configparser
 from app.systems.sqlite import SQLiteSource
 from app.systems.postgres import PostgresSource
 from app.systems.file import FileSource, FileSink
-from app.crms.salesforce import SalesforceCRM
-from app.crms.outreach import OutreachCRM
 from app.core.logger import logger
 from app.crms.registry import crm_registry
 
