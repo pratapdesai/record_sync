@@ -198,6 +198,7 @@ System A  <-----(`API Key`)---->  Record Sync Service  <---(`JWT`)--> System B (
 - Stats can be exported to metrics if needed
 
 - Hooks for OpenTelemetry tracing ready to add
+- Stats endpoint /v1/status (can be Prometheus-ready)
 
 ## 13. Dynamic Config
  - ConfigManager uses config.ini to load defaults
