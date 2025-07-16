@@ -11,6 +11,9 @@ from app.services.pollers.sqlite_poller import SQLitePoller
 from app.services.pollers.file_poller import FilePoller
 from app.systems.sqlite_sink import SQLiteSink
 from app.systems.file import FileSource
+from app.crms.salesforce import SalesforceCRM
+from app.services.pollers.salesforce_poller import SalesforcePoller
+from app.systems.sqlite import SQLiteSource
 
 sync_manager = SyncManager()
 poller = CommonCRMPoller(sync_manager)
@@ -35,7 +38,7 @@ async def startup_event():
     context.orchestrator = SyncOrchestrator(source, sink)
 
     # Run the CRM poller in background
-    asyncio.create_task(poller.poll_loop())
+    # asyncio.create_task(poller.poll_loop())
 
     # Optionally trigger one sync at boot
     # asyncio.create_task(context.orchestrator.sync_all())
@@ -43,7 +46,14 @@ async def startup_event():
     # sqlPoller = SQLitePoller(source, sink, interval=2)
     # asyncio.create_task(sqlPoller.poll_loop())
 
-    # Assume syncing between sqlite and file
+    # Bi Directional syncing between sqlite (System A) and file (System B)
+    # sqlite_to_file_bidirectional_sync(source, sink)
+    sqlite_to_salesforce_bidirectional_sync()
+    # Bi Directional syncing between sqlite (System A) and Salesforce CRM (System B)
+
+
+def sqlite_to_file_bidirectional_sync(source, sink):
+    # Bi Directional syncing between sqlite (System A) and file (System B)
     sqlite_source = source
     file_sink = sink
     file_source = FileSource("data/sink.json")
@@ -52,6 +62,18 @@ async def startup_event():
     # Poll both directions
     asyncio.create_task(SQLitePoller(sqlite_source, file_sink).poll_loop())
     asyncio.create_task(FilePoller(file_source, sqlite_sink).poll_loop())
+
+
+def sqlite_to_salesforce_bidirectional_sync():
+    # Assume SalesforceCRM is System B
+    salesforce = SalesforceCRM(config={})
+    sqlite_sink = SQLiteSink("data/demo.sqlite", "users")
+    sqlite_source = SQLiteSource("data/demo.sqlite", "users")
+
+    logger.info("[Startup] SalesforcePoller launched")
+    # Start Salesforce → SQLite poller
+    asyncio.create_task(SQLitePoller(sqlite_source, salesforce).poll_loop())
+    asyncio.create_task(SalesforcePoller(salesforce, sqlite_sink).poll_loop())
 
 
 @app.on_event("shutdown")

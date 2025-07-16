@@ -3,7 +3,7 @@ from app.crms.registry import crm_registry
 from app.crms.salesforce import SalesforceCRM
 
 router = APIRouter()
-salesforce = SalesforceCRM()
+salesforce = SalesforceCRM(config={})
 
 
 @router.get("/available", tags=["CRM"])

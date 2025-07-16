@@ -53,6 +53,17 @@ class OutreachCRM(BaseCRM):
         try:
             token = self._get_jwt_token()
             logger.info(f"[MOCK] Pushing to Outreach with JWT {token}: {data}")
+
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            }
+            url = "https://api.outreach.io/api/v2/prospects"
+
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, json=data, headers=headers)
+                response.raise_for_status()
+
             self.circuit_breaker.record_success()
         except Exception as e:
             logger.error(f"Mock Outreach push failed: {e}")

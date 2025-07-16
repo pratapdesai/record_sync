@@ -1,4 +1,4 @@
-import json
+import json, inspect
 import configparser
 from app.systems.sqlite import SQLiteSource
 from app.systems.postgres import PostgresSource
@@ -62,11 +62,28 @@ def load_systems_from_config(path: str):
             raise Exception(f"Missing keys in config.ini [{section}]: {missing}")
 
         # Pass only expected fields (optional)
-        filtered_creds = {k: creds[k] for k in schema}
+        # filtered_creds = {k: creds[k] for k in schema}
+        sig = inspect.signature(CRMClass.__init__)
+        param_names = list(sig.parameters.keys())
 
-        # to_sys = CRMClass(**creds)
-        to_sys = CRMClass(**filtered_creds)
+        # Case 1: expects a 'config' dict (recommended)
+        if 'config' in param_names:
+            to_sys = CRMClass(config=creds)
 
+        # Case 2: expects individual fields (fallback)
+        else:
+            allowed_args = set(param_names) - {"self"}
+            filtered_creds = {k: v for k, v in creds.items() if k in allowed_args}
+            to_sys = CRMClass(**filtered_creds)
+
+        # # to_sys = CRMClass(**creds)
+        # to_sys = CRMClass(**filtered_creds)
+
+    else:
+        raise Exception(f"Unsupported sink type: {b_type}")
+
+    logger.info(f"Loaded System A ({a_type}) and System B ({b_type})")
+    return from_sys, to_sys
 
     # elif b_type == "salesforce":
     #     crm_key = system_b_conf["crm_key"]
@@ -99,9 +116,3 @@ def load_systems_from_config(path: str):
     #             "api_url": creds["api_url"],
     #         }
     #     )
-
-    else:
-        raise Exception(f"Unsupported sink type: {b_type}")
-
-    logger.info(f"Loaded System A ({a_type}) and System B ({b_type})")
-    return from_sys, to_sys

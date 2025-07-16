@@ -48,11 +48,16 @@ class RulesEngine:
 
     def transform(self, record: dict) -> dict:
         mappings = self.rules.get("mappings", {})
-        return {
+        if not mappings:
+            logger.warning(f"[RulesEngine] No mappings configured!")
+        transformed = {
             to_key: record[from_key]
             for from_key, to_key in mappings.items()
             if from_key in record
         }
+        if not transformed:
+            logger.warning(f"[RulesEngine] No fields mapped for record: {record}")
+        return transformed
 
     def update_rules(self, new_rules: dict):
         if not isinstance(new_rules, dict):

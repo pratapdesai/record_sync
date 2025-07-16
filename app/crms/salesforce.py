@@ -2,10 +2,13 @@ from .base import BaseCRM
 from app.core.logger import logger
 from app.utils.circuit_breaker import CircuitBreaker
 from app.crms.registry import register_crm
+import httpx
 
 
 @register_crm("salesforce")
 class SalesforceCRM(BaseCRM):
+    mock_store = []  # fake in-memory DB
+
     def __init__(self, config):
         super().__init__(config)
         self.config = config
@@ -14,7 +17,6 @@ class SalesforceCRM(BaseCRM):
             recovery_timeout=60
         )
         self.secret = "salesforce_secret"
-        self.mock_store = []  # fake in-memory DB
 
     @classmethod
     def config_schema(cls):
@@ -41,13 +43,13 @@ class SalesforceCRM(BaseCRM):
 
     # push mock
     async def push(self, data: dict):
-        self.mock_store.append(data)
+        SalesforceCRM.mock_store.append(data)
         logger.info(f"[Mock Salesforce] Record pushed: {data}")
 
     # pull mock
     async def pull(self):
         logger.info("[Mock Salesforce] Pulling mock data...")
-        return self.mock_store.copy()
+        return SalesforceCRM.mock_store.copy()
 
     async def push_actual(self, data: dict):
         if not self.circuit_breaker.allow_request():
@@ -60,6 +62,17 @@ class SalesforceCRM(BaseCRM):
             # simulate push with a log
             # simulate external API call
             # await actual HTTP call in real
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            }
+
+            url = "https://fake.salesforce.com/sobjects/Account"
+
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, json=data, headers=headers)
+                response.raise_for_status()  # This raises HTTPStatusError on 500
+
             self.circuit_breaker.record_success()
         except Exception as e:
             logger.error(f"Push to Salesforce failed: {e}")

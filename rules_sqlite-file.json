@@ -1,0 +1,10 @@
+{
+  "filters": {
+    "status": "active"
+  },
+  "mappings": {
+    "record_id": "record_id",
+    "full_name": "full_name",
+    "email_address": "email_address"
+  }
+}

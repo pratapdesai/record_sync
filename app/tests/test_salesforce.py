@@ -7,7 +7,7 @@ from app.crms.salesforce import SalesforceCRM
 @pytest.mark.asyncio
 @respx.mock
 async def test_salesforce_push_success():
-    respx.post("https://my.salesforce.com/sobjects/Account").mock(
+    respx.post("https://fake.salesforce.com/sobjects/Account").mock(
         return_value=httpx.Response(201, json={"id": "001ABC"})
     )
 
@@ -18,12 +18,12 @@ async def test_salesforce_push_success():
         "Email": "john@example.com",
         "AccountId": "ACC123"
     }
-    await crm.push(data)
+    await crm.push_actual(data)
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_salesforce_push_failure():
-    respx.post("https://my.salesforce.com/sobjects/Account").mock(
+    respx.post("https://fake.salesforce.com/sobjects/Account").mock(
         return_value=httpx.Response(500, json={"error": "server error"})
     )
 
@@ -35,5 +35,8 @@ async def test_salesforce_push_failure():
         "AccountId": "ACC123"
     }
 
-    with pytest.raises(Exception):
-        await crm.push(data)
+    # with pytest.raises(Exception, match="Push failed"):
+    #     await crm.push(data)
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await crm.push_actual(data)

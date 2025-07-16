@@ -4,8 +4,8 @@
     "db_path": "data/demo.sqlite",
     "table": "users"
   },
-   "system_b": {
-    "type": "salesforce",
-    "crm_key": "salesforce_main"
+  "system_b": {
+    "type": "file_sink",
+    "path": "data/sink.json"
   }
 }

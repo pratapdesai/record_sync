@@ -2,8 +2,9 @@ import asyncio
 from app.core.logger import logger
 from app.services.rules_engine import RulesEngine
 
+
 class SalesforcePoller:
-    def __init__(self, source_crm, sqlite_sink, interval=5, rules_path="rules_salesforce_to_sqlite.json"):
+    def __init__(self, source_crm, sqlite_sink, interval=5, rules_path="rules.json"):
         self.source_crm = source_crm
         self.sqlite_sink = sqlite_sink
         self.rules = RulesEngine(rules_path)
@@ -21,6 +22,9 @@ class SalesforcePoller:
                     if not self.rules.match(record):
                         continue
                     transformed = self.rules.transform(record)
+                    if not transformed:
+                        logger.warning(f"[SalesforcePoller] Skipping empty transformed record: {record}")
+                        continue
                     await self.sqlite_sink.write_record(transformed)
                     self.synced_ids.add(rid)
                     logger.info(f"[Salesforce → SQLite] Synced record_id {rid}")
