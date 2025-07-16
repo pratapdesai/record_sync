@@ -26,6 +26,8 @@ A high-performance, extensible, production-grade Record Synchronization Service 
 
 ## 📄 Endpoints
 
+# ⚙️ Sync APIs
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | /v1/sync/ | Accept sync events (`operation` in body: create, read, update, delete) |
@@ -33,6 +35,28 @@ A high-performance, extensible, production-grade Record Synchronization Service 
 | GET | /v1/sync/status/{record_id} | Query sync status |
 | POST | /v1/sync/config-override | Dynamically override batch/flush/rate-limit |
 | POST | /v1/sync/rules | Update rules engine dynamically |
+
+# ⚙️ CRM APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /v1/crms/available| List all registered CRMs |
+| GET | /v1/crms/{crm}/schema | Schema requirements for CRM config |
+
+
+# ⚙️ Mock APIs (for testing CRMs)
+
+| Method | Endpoint                      | Description |
+|--------|-------------------------------|-------------|
+| POST   | /v1/crms/mock/salesforce/push | Push fake data to mock Salesforce |
+| POST   | /v1/crms/mock/outreach/push   | Push fake data to mock Outreach |
+
+
+
+## Swagger Docs
+
+Swagger docs: http://localhost:8000/docs
+
 
 ---
 

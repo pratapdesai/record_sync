@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from app.crms.registry import crm_registry
 from app.crms.salesforce import SalesforceCRM
+from app.crms.outreach import OutreachCRM
 
 router = APIRouter()
 salesforce = SalesforceCRM(config={})
+outreach = OutreachCRM(config={})
 
 
 @router.get("/available", tags=["CRM"])
@@ -30,6 +32,12 @@ async def get_crm_schema(crm_name: str):
 
 
 @router.post("/mock/salesforce/push")
-async def mock_push(record: dict):
+async def mock_salesforce_push(record: dict):
     await salesforce.push(record)
+    return {"status": "ok", "record": record}
+
+
+@router.post("/mock/outreach/push")
+async def mock_outreach_push(record: dict):
+    await outreach.push(record)
     return {"status": "ok", "record": record}
