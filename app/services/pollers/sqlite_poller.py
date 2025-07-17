@@ -15,7 +15,6 @@ class SQLitePoller:
                 new_records = await self.source.fetch_new_records()
                 for record in new_records:
                     if not self.rules.match(record):
-                        print("RULE NOT MATCHED SURYA", record)
                         continue
                     transformed = self.rules.transform(record)
                     await self.sink.push(transformed)

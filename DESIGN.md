@@ -21,8 +21,20 @@ The service is designed for high scale (300 million records/day) with 99.9% avai
 
 ### Architecture
 
-System A  <-----(`API Key`)---->  Record Sync Service  <---(`JWT`)--> System B (CRM)
+![img_1.png](img_1.png)
 
+- Layered architecture 
+  - systems/  → Source/sink implementations (sqlite, file)
+  - crms/     → External CRM adapters (salesforce, outreach)
+  - services/ → Pollers, queue, rules engine, circuit breaker 
+  - api/      → FastAPI endpoints 
+  - tests/    → Unit test files
+  - core/     → Config loaders, constants
+  - models/   → Models of record, config
+
+- Parallels to AWS Glue / DataPipelines 
+  - You can schedule, trigger or daemonize sync jobs 
+  - Works with both push + pull semantics
 
 ## 2. Key components:
 
@@ -93,39 +105,95 @@ System A  <-----(`API Key`)---->  Record Sync Service  <---(`JWT`)--> System B (
 - advanced retry/backoff
 
 ## 4. Patterns Used
-| Pattern |  Usage |
-| ---------------- | --------------|
-| Strategy Pattern |  each CRM plugin (SalesforceCRM, OutreachCRM) implements its own push() and transform() logic |
-| Singleton | ConfigManager uses a singleton to manage dynamic configuration |
-|Command pattern | each record sync is a command event
-| Rules Engine | applies business rules to determine whether to sync
-| Rate limiting | a sliding window algorithm with queue throttling
-|Circuit breaker| uses retry libraries with capped attempts
-|Queue buffer | Redis (or mocked in-memory) to handle burst loads
-|Idempotency| record IDs are used as unique keys
-|Logs |structured JSON logs (Loguru) for CloudWatch or ELK parsing
+| Pattern | Usage                                                                                                                             |
+| ---------------- |-----------------------------------------------------------------------------------------------------------------------------------|
+| Strategy Pattern | Pollers switch behaviour per Source. each CRM plugin (SalesforceCRM, OutreachCRM) implements its own push() and transform() logic |
+| Plugin Registry Pattern | CRMs can be hot-plugged|
+| Singleton | ConfigManager uses a singleton to manage dynamic configuration                                                                    |
+|Command pattern | each record sync is a command event                                                                                               
+|Observer Pattern|Queue retry and circuit breaker listeners|
+| Rules Engine | applies business rules to determine whether to sync                                                                               
+| Rate limiting | a sliding window algorithm with queue throttling                                                                                  
+|Circuit breaker| uses retry libraries with capped attempts                                                                                         
+|Queue buffer | Redis (or mocked in-memory) to handle burst loads                                                                                 
+|Idempotency| record IDs are used as unique keys                                                                                                
+|Logs | structured JSON logs (Loguru) for CloudWatch or ELK parsing                                                                       
 
 ## 5. High-Level Flow
+![img.png](img.png)
+### Record Sync Service offers wide range of services described as below
 
-- System A sends a sync request to POST `/v1/sync/`
+  - #### 🔁 1. Automated Bidirectional Syncs (Background Pollers)
+    ```
+    START (Poller Startup)
+      ↓
+    [Polling Loop Begins for Each Direction]
+      ↓
+    System A or B fetches delta records via pull()
+      ↓
+    Each record goes through RulesEngine:
+      → Validates required fields
+      → Applies field mapping and filters
+      ↓
+    If allowed by rules:
+      → Record is queued in Queue Manager
+      ↓
+    Queue Manager periodically flushes in batches
+      ↓
+    Rate Limiter controls batch frequency (respect CRM limits)
+      ↓
+    CRM Plugin is invoked
+        → .transform() maps fields to target schema
+        → .push() (or push_actual()) sends record using JWT-auth
+      ↓
+    Status is tracked:
+      → queued → synced / failed
+      ↓
+    On transient failures:
+      → RetryManager retries with exponential backoff
+      ↓
+    All actions and transitions logged (JSON logs)
+      ↺ (Loop repeats)
+    ```
+  - #### ▶️ 2. Manual One-way Sync (API-Triggered via /v1/sync/manual)
+    ```
+    System A sends POST request to /v1/sync/manual?direction=forward|reverse
+      ↓
+    SyncManager loads sync_config.json and config.ini
+      ↓
+    Fetch records from source system (System A or B)
+      ↓
+    Each record enters RulesEngine:
+      → Check required fields
+      → Apply mapping and filters
+      ↓
+    If valid, record is added to Queue
+      ↓
+    QueueManager flushes with CRM-safe limits
+      ↓
+    CRM Plugin executes:
+      → transform(data)
+      → push_actual(data) using JWT token
+      ↓
+    Result is recorded:
+      → Success, failure, or skipped
+      ↓
+    RetryManager schedules retry if needed
+      ↓
+    API returns summary: total synced / failed / skipped
+    ```
+    
 
-- The RulesEngine evaluates whether to proceed based on preconfigured rules (required fields, disallowed fields, etc.)
-  - If permitted, the record is queued
-
-- Queue Manager periodically flushes batches
-
-- Rate limiter ensures CRM API limits are respected and controls how many records per minute flush
-
-- CRM plugin (transform() + push()) pushes data to external CRM 
-- CRM plugin uses JWT to push to System B 
-- Transform maps fields from System A to CRM 
-- Status is tracked and updated (queued, synced, failed, etc.)
-- Retries are scheduled if a transient failure happens. Retry manager handles retries with backoff 
-- Manual retries can be triggered 
-- All events logged for observability 
-- All logs are JSON structured 
-- Rules can be edited dynamically via the `/v1/sync/rules` endpoint 
-- Configs can be overridden dynamically via `/v1/sync/config-override`
+  - #### 🔍 3. Additional System Behaviors & Components
+    | Component          | Functionality                                                                   |
+    | ------------------ | ------------------------------------------------------------------------------- |
+    | **RulesEngine**    | Determines if a record can sync based on `rules.json`: required fields, filters |
+    | **QueueManager**   | Buffers and batches records; supports periodic and triggered flushes            |
+    | **RateLimiter**    | Throttles API calls to prevent hitting CRM rate limits                          |
+    | **RetryManager**   | Tracks transient errors; retries failed records with backoff                    |
+    | **CRM Plugin**     | Contains `.transform()` + `.push()` + `.pull()` methods for each CRM            |
+    | **Status Tracker** | Maintains state of each record (queued, synced, failed)                         |
+    | **Logger**         | JSON structured logs for traceability and observability                         |
 
 ## 6. API Design
 | Method | Endpoint | Purpose |
@@ -322,6 +390,10 @@ but you need persistence if you truly cannot lose records (append to disk or use
 ✅ allow multi-tenant CRM logic \
 ✅ schema-driven transforms via JSON schemas instead of code \
 ✅ integrate KMS for secret encryption 
+✅ Webhooks for CRMs (instead of polling)
+✅ GUI to edit rules, configs dynamically
+✅ Redis-backed deduplication, idempotency
+✅ Tracing per record (OpenTelemetry)
 
 ## 21. 🚀 Conclusion
 

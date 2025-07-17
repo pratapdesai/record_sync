@@ -8,6 +8,7 @@ from typing import Literal
 from app.services.poller import CommonCRMPoller
 from app.core.context import context
 from fastapi import Query
+from app.services.rules_engine import RulesEngine
 
 router = APIRouter()
 sync_manager = SyncManager()
@@ -72,6 +73,15 @@ async def update_rules(request: Request):
     except Exception as e:
         logger.exception("Error updating rules")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/rules")
+async def get_rules():
+    """
+    Returns the currently loaded rules.json config.
+    """
+    rules_engine = RulesEngine()
+    return rules_engine.rules
 
 
 @router.post("/poll/{crm}")

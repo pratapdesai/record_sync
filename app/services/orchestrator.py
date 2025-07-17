@@ -11,7 +11,6 @@ class SyncOrchestrator:
         records = await self.source.fetch_records()
         synced = 0
         for record in records:
-            print("Surya", allow_duplicates)
             await self.sink.write_record(record, allow_duplicates=allow_duplicates)
             synced += 1
         logger.info(f"Finished syncing {len(records)} records.")

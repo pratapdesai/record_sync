@@ -3,6 +3,7 @@ from app.core.logger import logger
 from app.utils.circuit_breaker import CircuitBreaker
 from app.crms.registry import register_crm
 import httpx
+from typing import Dict
 
 
 @register_crm("salesforce")
@@ -78,6 +79,18 @@ class SalesforceCRM(BaseCRM):
             logger.error(f"Push to Salesforce failed: {e}")
             self.circuit_breaker.record_failure()
             raise
+
+    async def write_record(self, record: Dict, allow_duplicates: bool = False):
+
+        if not allow_duplicates:
+            record_ids = {r.get("record_id") for r in SalesforceCRM.mock_store if "record_id" in r}
+            if record["record_id"] in record_ids:
+                logger.info(f"[Dedup] Skipping already synced record {record['record_id']}")
+                return
+
+        SalesforceCRM.mock_store.append(record)
+
+        logger.info(f"Wrote record {record['record_id']} to {self.path}")
 
     async def fetch_recent_changes(self, since_timestamp):
         """
