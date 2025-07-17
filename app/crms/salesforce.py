@@ -65,10 +65,23 @@ class SalesforceCRM(BaseCRM):
 
     # pull mock
     async def pull(self):
+        if not rate_limiter.allow("salesforce"):
+            logger.warning(f"[RateLimiter] CRM salesforce rate limit exceeded. Skipping or delaying push.")
+            # Optionally retry or delay
+            return
+        else:
+            logger.info("Salesforce Rate Limiting Not breached")
         logger.info("[Mock Salesforce] Pulling mock data...")
         return SalesforceCRM.mock_store.copy()
 
     async def push_actual(self, data: dict):
+        if not rate_limiter.allow("salesforce"):
+            logger.warning(f"[RateLimiter] CRM salesforce rate limit exceeded. Skipping or delaying push.")
+            # Optionally retry or delay
+            return
+        else:
+            logger.info("Salesforce Rate Limiting Not breached")
+
         if not self.circuit_breaker.allow_request():
             logger.warning("Salesforce circuit breaker is OPEN, skipping push")
             raise Exception("Salesforce circuit breaker is OPEN")
@@ -100,6 +113,12 @@ class SalesforceCRM(BaseCRM):
             raise
 
     async def write_record(self, record: Dict, allow_duplicates: bool = False):
+        if not rate_limiter.allow("salesforce"):
+            logger.warning(f"[RateLimiter] CRM salesforce rate limit exceeded. Skipping or delaying push.")
+            # Optionally retry or delay
+            return
+        else:
+            logger.info("Salesforce Rate Limiting Not breached")
 
         if not allow_duplicates:
             record_ids = {r.get("record_id") for r in SalesforceCRM.mock_store if "record_id" in r}
