@@ -1,7 +1,9 @@
 # 📦 Record Sync Service
 
-Bi-directional, event-driven microservice to synchronize CRUD record changes between an internal system (System A) and external CRMs (System B, e.g., Salesforce, Outreach). Designed for high scale, dynamic configuration, rules-based decisioning, and extensibility to new CRMs.
-A high-performance, extensible, production-grade Record Synchronization Service that facilitates data transfer and sync across heterogeneous systems such as CRMs (Salesforce, Outreach), databases (PostgreSQL, SQLite), and flat file storage. Supports real-time and batch sync with rule-based transformation, conflict resolution, retry, deduplication, and observability.
+- Bi-directional, event-driven microservice to synchronize CRUD record changes between an internal system (System A) and external CRMs (System B, e.g., Salesforce, Outreach). Designed for high scale, dynamic configuration, rules-based decisioning, and extensibility to new CRMs.
+
+
+- A high-performance, extensible, production-grade Record Synchronization Service that facilitates data transfer and sync across heterogeneous systems such as CRMs (Salesforce, Outreach), databases (PostgreSQL, SQLite), and flat file storage. Supports real-time and batch sync with rule-based transformation, conflict resolution, retry, deduplication, and observability.
 ---
 
 ## 🚀 Features
