@@ -1,4 +1,4 @@
-Record Sync Service
+# Record Sync Service
 
 ## 1. Overview
 The Record Sync Service is a scalable, event-driven, decoupled microservice built to synchronize CRUD (Create, Read, Update, Delete) record operations between:
@@ -449,6 +449,7 @@ but if persistence is needed and  truly cannot lose records (append to disk or u
 ✅ GUI to edit rules, configs dynamically
 ✅ Redis-backed deduplication, idempotency
 ✅ Tracing per record (OpenTelemetry)
+
 
 ## 21. 🚀 Conclusion
 

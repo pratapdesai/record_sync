@@ -5,6 +5,10 @@
 
 - A high-performance, extensible, production-grade Record Synchronization Service that facilitates data transfer and sync across heterogeneous systems such as CRMs (Salesforce, Outreach), databases (PostgreSQL, SQLite), and flat file storage. Supports real-time and batch sync with rule-based transformation, conflict resolution, retry, deduplication, and observability.
 ---
+## Design Document
+
+Design document can be found out in [DESIGN.md](DESIGN.md)
+
 
 ## 🚀 Features
 
