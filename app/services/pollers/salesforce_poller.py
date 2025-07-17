@@ -1,6 +1,7 @@
 import asyncio
 from app.core.logger import logger
 from app.services.rules_engine import RulesEngine
+from app.services.status import status_tracker
 
 
 class SalesforcePoller:
@@ -12,6 +13,7 @@ class SalesforcePoller:
         self.synced_ids = set()
 
     async def poll_loop(self):
+        status_tracker.stats["pollers_active"].append("salesforce")
         while True:
             try:
                 records = await self.source_crm.pull()

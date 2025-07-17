@@ -1,7 +1,7 @@
 from collections import defaultdict, deque
 from threading import Lock
 from app.core.logger import logger
-
+from app.services.status import status_tracker
 
 class QueueManager:
     def __init__(self):
@@ -11,6 +11,7 @@ class QueueManager:
     def enqueue(self, crm: str, record: dict):
         with self.locks[crm]:
             self.queues[crm].append(record)
+            status_tracker.update_stat("queue_size", len(self.queues))
             logger.debug(f"Queued record for {crm}. Queue size: {len(self.queues[crm])}")
 
     def flush(self, crm: str, batch_size: int):

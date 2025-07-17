@@ -33,11 +33,65 @@ The service is designed for high scale (300 million records/day) with 99.9% avai
   - models/   → Models of record, config
 
 - Parallels to AWS Glue / DataPipelines 
-  - You can schedule, trigger or daemonize sync jobs 
+  - Can schedule, trigger or daemonize sync jobs 
   - Works with both push + pull semantics
 
-## 2. Key components:
+## 2. ⚙️ Component Responsibilities
 
+### 🔁 Pollers
+
+- Watch for changes in data sources (like SQLite or CRM)
+- Trigger sync logic in real-time
+
+### ⚖️ RulesEngine
+
+- Field mapping
+
+- Validation: required/missing/disallowed fields
+
+- Filtering records
+
+### 🚪 CRM Plugin (Salesforce/Outreach)
+
+- transform() – prepares data structure for CRM
+
+- push() – pushes data using mocked or real API
+
+### 🕳 CircuitBreaker
+
+- Opens after threshold failures
+
+- Prevents repeated failing attempts
+
+### 🚥 RateLimiter
+
+- Uses records_per_minute to pace requests to CRMs
+
+### 🔁 RetryManager
+
+- Retries transient failures
+
+- Retries are queued and backoff is supported
+
+🎯 StatusTracker
+
+- Tracks:
+
+  - total_synced, failed, queued 
+  - last_sync_time, retries_pending, pollers_active 
+  - GET /v1/status returns this JSON
+
+### 🗂 Config Files
+
+| File | Description |
+|------|-------------|
+| rules.json|  Field mapping and validation rules|
+ | sync_config.json | Defines source/sink systems, CRM direction|
+| config.ini| Holds credentials for CRM systems|
+
+
+
+### Gist of Explanation
 - FastAPI API layer with strong data validation (Pydantic)
 
 - Queue manager (Redis, or mocked Redis for local dev)
@@ -63,6 +117,7 @@ The service is designed for high scale (300 million records/day) with 99.9% avai
 - Dynamic rules update through an API
 
 - No data loss guarantee through retries and idempotency
+
 
 ## 3. Technology Choices
 
@@ -346,7 +401,7 @@ no cross-region S3 worries
 
 in-memory, super fast
 
-but you need persistence if you truly cannot lose records (append to disk or use Redis Streams in prod)
+but if persistence is needed and  truly cannot lose records (append to disk or use Redis Streams in prod)
 
 ## 18. Testing & Quality
 

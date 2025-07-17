@@ -9,6 +9,7 @@ from app.services.poller import CommonCRMPoller
 from app.core.context import context
 from fastapi import Query
 from app.services.rules_engine import RulesEngine
+from app.services.status import status_tracker
 
 router = APIRouter()
 sync_manager = SyncManager()
@@ -52,6 +53,11 @@ async def override_config(payload: ConfigOverride):
     except Exception as e:
         logger.exception("Error overriding config")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/status")
+async def get_sync_status():
+    return status_tracker.get_status()
 
 
 @router.get("/status/{record_id}")

@@ -96,7 +96,11 @@ A high-performance, extensible, production-grade Record Synchronization Service 
       }
   }'
   ```
-- 
+- GET the status of the sync
+
+  ```
+  curl -X GET http://localhost:8000/v1/sync/status
+  ```
 
 
 ## Swagger Docs
@@ -104,7 +108,7 @@ A high-performance, extensible, production-grade Record Synchronization Service 
 Swagger docs: http://localhost:8000/docs
 
 
----
+
 
 ## 📦 Running locally
 
@@ -121,4 +125,41 @@ Swagger docs: http://localhost:8000/docs
   ```
   docker build -t record-sync .
   docker run -p 8000:8000 record-sync
+  ```
 
+## 🚀 🚀 What Happens When You Run the Service
+#### By default, the Record Sync Service launches an automated bi-directional synchronization between:
+
+- System A → SQLite database (users table)
+
+- System B → Salesforce CRM (mocked or real, based on config)
+
+#### 🔄 What Exactly Starts?
+
+- Pollers are initialized on both sides:
+  - One polls the SQLite DB for new/updated records. 
+  - One polls the Salesforce CRM for new/updated records.
+
+- Records are:
+  - Transformed based on rules.json 
+  - Enqueued for syncing 
+  - Flushed in controlled batches using the Queue Manager
+
+- Sync is processed via:
+  - Retry Manager for failed pushes 
+  - Rate Limiter to throttle outbound API calls 
+  - Circuit Breaker to isolate failing systems
+
+- Observability is enabled:
+  - All actions are logged as structured JSON 
+  - Sync status (queued, synced, failed) is tracked per record 
+  - All logs currently get stored to /logs/record_sync.log
+
+System can be monitored using the /v1/status API or by tailing the logs.
+
+## What are tested till now ?
+### Refer main.py
+
+- SQLite to File Bidirectional Sync
+- SQLite to Salesforce Bidirectional Sync
+- File to File Bidirectional Sync

@@ -64,7 +64,6 @@ class RulesEngine:
             raise ValueError("Rules must be a dictionary")
         with self.lock:
             self.rules = new_rules
-        # you could also dump to file:
         with open("rules.json", "w") as f:
             json.dump(new_rules, f, indent=2)
         logger.info("Rules updated and persisted locally.")

@@ -1,6 +1,7 @@
 import asyncio
 from app.core.logger import logger
 from app.services.rules_engine import RulesEngine
+from app.services.status import status_tracker
 
 class SQLitePoller:
     def __init__(self, source, sink, interval=5, rules_path="rules.json"):
@@ -10,6 +11,7 @@ class SQLitePoller:
         self.rules = RulesEngine(rules_path)
 
     async def poll_loop(self):
+        status_tracker.stats["pollers_active"].append("sqlite")
         while True:
             try:
                 new_records = await self.source.fetch_new_records()

@@ -30,7 +30,7 @@ class SyncManager:
         await self.try_flush(crm)
 
     async def try_flush(self, crm: str):
-        # in production, you'd use a timer or background thread
+        # in production, use a timer or background thread
         batch = self.queue.flush(crm, DEFAULT_BATCH_SIZE)
         if not batch:
             return

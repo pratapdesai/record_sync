@@ -4,6 +4,8 @@ from app.utils.circuit_breaker import CircuitBreaker
 from app.crms.registry import register_crm
 import httpx
 from typing import Dict
+from app.services.status import status_tracker
+from datetime import datetime
 
 
 @register_crm("salesforce")
@@ -45,6 +47,8 @@ class SalesforceCRM(BaseCRM):
     # push mock
     async def push(self, data: dict):
         SalesforceCRM.mock_store.append(data)
+        status_tracker.update_stat("last_sync_success", datetime.utcnow().isoformat())
+        status_tracker.increment("total_synced")
         logger.info(f"[Mock Salesforce] Record pushed: {data}")
 
     # pull mock
@@ -74,6 +78,9 @@ class SalesforceCRM(BaseCRM):
                 response = await client.post(url, json=data, headers=headers)
                 response.raise_for_status()  # This raises HTTPStatusError on 500
 
+            status_tracker.update_stat("last_sync_success", datetime.utcnow().isoformat())
+            status_tracker.increment("total_synced")
+
             self.circuit_breaker.record_success()
         except Exception as e:
             logger.error(f"Push to Salesforce failed: {e}")
@@ -89,8 +96,10 @@ class SalesforceCRM(BaseCRM):
                 return
 
         SalesforceCRM.mock_store.append(record)
+        status_tracker.update_stat("last_sync_success", datetime.utcnow().isoformat())
+        status_tracker.increment("total_synced")
 
-        logger.info(f"Wrote record {record['record_id']} to {self.path}")
+        logger.info(f"Wrote record {record['record_id']} to salesforce")
 
     async def fetch_recent_changes(self, since_timestamp):
         """
