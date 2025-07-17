@@ -304,7 +304,7 @@ The service is designed for high scale (300 million records/day) with 99.9% avai
 
  - Can easily migrate to Postgres later
 
- - Provides a GET `/v1/sync/status/{record_id}` to inspect 
+ - Provides a GET `/v1/sync/status/` to inspect 
    - queued 
    - synced 
    - failed 
