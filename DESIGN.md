@@ -251,13 +251,8 @@ The service is designed for high scale (300 million records/day) with 99.9% avai
     | **Logger**         | JSON structured logs for traceability and observability                         |
 
 ## 6. API Design
-| Method | Endpoint | Purpose |
-| --------------- | --------------| -------------|
-|POST	|/v1/sync/	|Submit a sync event (CRUD driven by operation)
-|POST	|/v1/sync/retry/{record_id}	|Manually retry a failed sync
-|POST	|/v1/sync/config-override	|Dynamically override CRM configurations
-|GET	|/v1/sync/status/{record_id}|	Get current sync status
-|POST	|/v1/sync/rules|	Dynamically update sync rules (without S3)
+
+Refer Endpoints Section in [README.md](README.md)
 
 ## 7. Rules Engine
 
@@ -349,13 +344,10 @@ The service is designed for high scale (300 million records/day) with 99.9% avai
 
 ## 15. Security
 
-- Internal System A authenticates using API keys
-
-- record_sync_service authenticates to CRM via JWT (or OAuth)
-
-- Rules update API should be protected with a strong admin API key or OAuth (planned)
-- Config override also to be protected
 - No sensitive secrets in code
+- Manual sync endpoints (/v1/sync/manual) are  secured by JWT and API key.
+- Rate Limiting at CRM side is honoured
+- All the API interactions use **HTTPS** endpoints
 
 ## 16. Extensibility
 

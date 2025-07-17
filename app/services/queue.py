@@ -2,13 +2,19 @@ from collections import defaultdict, deque
 from threading import Lock
 from app.core.logger import logger
 from app.services.status import status_tracker
+from app.utils.rate_limiter import SlidingWindowRateLimiter
 
+rate_limiter = SlidingWindowRateLimiter()
 class QueueManager:
     def __init__(self):
         self.queues = defaultdict(deque)
         self.locks = defaultdict(Lock)
 
     def enqueue(self, crm: str, record: dict):
+        if not rate_limiter.allow(crm):
+            logger.warning(f"[RateLimiter] CRM '{crm}' rate limit exceeded. Skipping or delaying push.")
+            # Optionally retry or delay
+            return
         with self.locks[crm]:
             self.queues[crm].append(record)
             status_tracker.update_stat("queue_size", len(self.queues))

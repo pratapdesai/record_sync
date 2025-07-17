@@ -6,6 +6,10 @@ import httpx
 from typing import Dict
 from app.services.status import status_tracker
 from datetime import datetime
+from app.utils.rate_limiter import SlidingWindowRateLimiter
+from app.core.constants import DEFAULT_MAX_REQUESTS, DEFAULT_WINDOW_SIZE
+
+rate_limiter = SlidingWindowRateLimiter()
 
 
 @register_crm("salesforce")
@@ -15,6 +19,8 @@ class SalesforceCRM(BaseCRM):
     def __init__(self, config):
         super().__init__(config)
         self.config = config
+        SlidingWindowRateLimiter.max_requests = DEFAULT_MAX_REQUESTS
+        SlidingWindowRateLimiter.window = DEFAULT_WINDOW_SIZE
         self.circuit_breaker = CircuitBreaker(
             failure_threshold=5,
             recovery_timeout=60
@@ -46,6 +52,12 @@ class SalesforceCRM(BaseCRM):
 
     # push mock
     async def push(self, data: dict):
+        if not rate_limiter.allow("salesforce"):
+            logger.warning(f"[RateLimiter] CRM salesforce rate limit exceeded. Skipping or delaying push.")
+            # Optionally retry or delay
+            return
+        else:
+            logger.info("Salesforce Rate Limiting Not breached")
         SalesforceCRM.mock_store.append(data)
         status_tracker.update_stat("last_sync_success", datetime.utcnow().isoformat())
         status_tracker.increment("total_synced")
