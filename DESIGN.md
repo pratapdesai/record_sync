@@ -374,34 +374,41 @@ Adding a new CRM:
 
 ## 17. Trade-offs
 
-✅ Chose single sync endpoint:
+### 1. Poll-based vs Webhook-based Syncing
 
-- Why you don’t see explicit CRUD?
-  - explicit CRUD routes would be more RESTful but harder to batch
-  - In the code so far, the operation field on the sync requests carries the CRUD intention (create, read, update, delete) — but did not explicitly break them into separate routes, because “single sync endpoint” pattern is being followed that takes the operation type in the payload and then applies a transformation.
-  
-- easier batching
+- Chosen: Polling both source and sink for changes.
 
-- simpler idempotency
+- Trade-off: Polling is simpler and works even if systems don't support webhooks, but it adds latency and can increase load.
 
-- fewer routing changes if new operations arise
+- Alternative: Webhooks provide real-time updates but require external CRM support and secure endpoint management.
 
-✅ Separate CRUD routes would add discoverability, but reduce batching benefits
-→ event-driven is better here
+### 2. File-based Config vs API-driven Configuration
+- Chosen: Static rules.json and sync_config.json files with optional API override.
 
-✅ Used local rules.json:
+- Trade-off: File-based configs are easy to version control but require redeploy or restart to take full effect.
 
-easier to reason about
+- Alternative: Fully dynamic config with persistent DB + admin panel would enable real-time edits but adds complexity. Also, can be taken from S3 over the cloud (if needed)
 
-easier to test
+### 3. In-Memory Queue & Retry Management
+- Chosen: Simple in-process queue and retry manager with exponential backoff.
 
-no cross-region S3 worries
+- Trade-off: Easy to test and debug, but not resilient to process crashes.
 
-✅ Redis for buffer:
+- Alternative: Redis/Kafka-backed queues offer durability and distribution, at cost of added ops overhead.
 
-in-memory, super fast
+### 4. Flat JSON Logging (Loguru)
+- Chosen: JSON logs via Loguru for structure and observability.
 
-but if persistence is needed and  truly cannot lose records (append to disk or use Redis Streams in prod)
+- Trade-off: Logs are rich and structured, but there is no built-in log rotation or metrics dashboard.
+
+- Alternative: Integration with ELK/Grafana via FluentBit or OpenTelemetry for full tracing/metrics.
+
+### 5. No Persistent Sync History Table
+- Chosen: In-memory status tracking (StatusTracker) and logs.
+
+- Trade-off: Simple for stateless services, but no long-term record of historical syncs.
+
+- Alternative: Use SQLite or PostgreSQL to persist sync outcomes and allow audit/troubleshooting.
 
 ## 18. Testing & Quality
 
