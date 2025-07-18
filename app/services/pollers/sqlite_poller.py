@@ -19,7 +19,12 @@ class SQLitePoller:
                     if not self.rules.match(record):
                         continue
                     transformed = self.rules.transform(record)
-                    await self.sink.push(transformed)
+                    if hasattr(self.sink, "push"):
+                        await self.sink.push(transformed)
+                    elif hasattr(self.sink, "write_record"):
+                        await self.sink.write_record(transformed)
+                    else:
+                        raise Exception(f"Unsupported sink type: {type(self.sink)}")
                     logger.info(f"[Realtime Sync] Record {record['record_id']} synced")
             except Exception as e:
                 logger.exception(f"[Poller] Error syncing records: {e}")

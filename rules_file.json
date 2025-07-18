@@ -4,8 +4,8 @@
   },
   "mappings": {
     "record_id": "record_id",
-    "name": "full_name",
-    "email": "email_address",
+    "full_name": "name",
+    "email_address": "email",
     "status": "status"
   }
 }

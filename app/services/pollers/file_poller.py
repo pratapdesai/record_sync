@@ -1,18 +1,23 @@
 import asyncio
 from app.core.logger import logger
 from app.services.rules_engine import RulesEngine
+from app.services.status import status_tracker
+
 
 class FilePoller:
     def __init__(self, source, sink, interval=5, rules_path="rules.json"):
+
         self.source = source
         self.sink = sink
         self.rules = RulesEngine(rules_path)
         self.interval = interval
 
     async def poll_loop(self):
+        status_tracker.stats["pollers_active"].append("file")
         while True:
             try:
                 records = await self.source.fetch_new_records()
+
                 for r in records:
                     if not self.rules.match(r):
                         continue
