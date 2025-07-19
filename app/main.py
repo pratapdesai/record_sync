@@ -5,12 +5,10 @@ from app.services.poller import CommonCRMPoller
 from app.services.sync_manager import SyncManager
 import asyncio
 from app.core.loader import load_systems_from_config
-from app.services.orchestrator import SyncOrchestrator
-from app.core.context import context
 from app.services.pollers.sqlite_poller import SQLitePoller
 from app.services.pollers.file_poller import FilePoller
 from app.systems.sqlite_sink import SQLiteSink
-from app.systems.file import FileSource
+from app.systems.file import FileSource, FileSink
 from app.crms.salesforce import SalesforceCRM
 from app.services.pollers.salesforce_poller import SalesforcePoller
 from app.systems.sqlite import SQLiteSource
@@ -39,6 +37,9 @@ async def startup_event():
     # Bi Directional syncing between sqlite (System A) and Salesforce CRM (System B)
     sqlite_to_salesforce_bidirectional_sync()
 
+    # Uncomment if needed -- Bi Directional syncing between File (System A) and File (System B)
+    # file_to_file_bidirectional_sync()
+
 
 def sqlite_to_file_bidirectional_sync():
     # Bi Directional syncing between sqlite (System A) and file (System B)
@@ -64,6 +65,18 @@ def sqlite_to_salesforce_bidirectional_sync():
     # Start Salesforce → SQLite poller
     asyncio.create_task(SQLitePoller(sqlite_source, salesforce).poll_loop())
     asyncio.create_task(SalesforcePoller(salesforce, sqlite_sink).poll_loop())
+
+
+def file_to_file_bidirectional_sync():
+    source, sink = load_systems_from_config("sync_config_file_file.json")
+
+    # Poll both directions
+    asyncio.create_task(FilePoller(source, sink, 5, rules_path="rules_file_file.json").poll_loop())
+
+    source = FileSource("data/sink.json")
+    sink = FileSink("data/source.json")
+
+    asyncio.create_task(FilePoller(source, sink, 5, rules_path="rules_file_file.json").poll_loop())
 
 
 @app.on_event("shutdown")

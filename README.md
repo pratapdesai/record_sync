@@ -164,7 +164,7 @@ Swagger docs: http://localhost:8000/docs
 System can be monitored using the /v1/status API or by tailing the logs.
 
 ## What are tested till now ?
-### Refer main.py
+### Refer [main.py](app/main.py)
 
 - SQLite to File Bidirectional Sync
 - SQLite to Salesforce Bidirectional Sync
