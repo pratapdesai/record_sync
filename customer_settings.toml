@@ -1,0 +1,16 @@
+[default]
+max_requests = 10
+window_size = 10
+
+[customer1]
+max_requests = 10
+window_size = 100
+
+[customer2]
+max_requests = 100
+window_size = 100
+
+
+[surya]
+max_requests = 5
+window_size = 10

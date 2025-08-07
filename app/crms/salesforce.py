@@ -8,6 +8,7 @@ from app.services.status import status_tracker
 from datetime import datetime
 from app.utils.rate_limiter import SlidingWindowRateLimiter
 from app.core.constants import DEFAULT_MAX_REQUESTS, DEFAULT_WINDOW_SIZE
+from app.settings.settings import CustomerSettings
 
 rate_limiter = SlidingWindowRateLimiter()
 
@@ -21,6 +22,20 @@ class SalesforceCRM(BaseCRM):
         self.config = config
         SlidingWindowRateLimiter.max_requests = DEFAULT_MAX_REQUESTS
         SlidingWindowRateLimiter.window = DEFAULT_WINDOW_SIZE
+        if "customer_id" in config:
+            SlidingWindowRateLimiter.max_requests = CustomerSettings.settings.get(config["customer_id"],
+                                                                                  CustomerSettings.settings.get(
+                                                                                      "default")).get("max_requests")
+            SlidingWindowRateLimiter.window = CustomerSettings.settings.get(config["customer_id"],
+                                                                            CustomerSettings.settings.get(
+                                                                                "default")).get("window_size")
+
+            print("Customer : ", config["customer_id"])
+            print("Rate Limits are as follows \n")
+            print(SlidingWindowRateLimiter.max_requests)
+            print(SlidingWindowRateLimiter.window)
+            print("Rate Limits are ended \n")
+
         self.circuit_breaker = CircuitBreaker(
             failure_threshold=5,
             recovery_timeout=60
@@ -68,7 +83,7 @@ class SalesforceCRM(BaseCRM):
         if not rate_limiter.allow("salesforce"):
             logger.warning(f"[RateLimiter] CRM salesforce rate limit exceeded. Skipping or delaying push.")
             # Optionally retry or delay
-            return
+            return []
         else:
             logger.info("Salesforce Rate Limiting Not breached")
         logger.info("[Mock Salesforce] Pulling mock data...")

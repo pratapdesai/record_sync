@@ -169,3 +169,15 @@ System can be monitored using the /v1/status API or by tailing the logs.
 - SQLite to File Bidirectional Sync
 - SQLite to Salesforce Bidirectional Sync
 - File to File Bidirectional Sync
+
+## For Triggering Customer Based Bidirectional Sync
+
+- Add the Customer specific CRM values in [customer_settings.toml](customer_settings.toml)
+- If there is nothing for the customer, default values are considered.
+- Below is the process to run the SQLITE to Salesforce Bidirectional Sync.
+  - > make run
+  - Trigger the SQLITE to Salesforce Bidirectional Sync
+  ```
+  curl -X POST 'http://localhost:8000/v1/sync/sqlite-to-salesforce?customer_id=customer1'
+  curl -X POST 'http://localhost:8000/v1/sync/sqlite-to-salesforce?customer_id=surya'
+  ```

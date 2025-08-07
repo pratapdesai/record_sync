@@ -10,6 +10,7 @@ from app.core.context import context
 from fastapi import Query
 from app.services.rules_engine import RulesEngine
 from app.services.status import status_tracker
+from app.helpers import sqlite_to_salesforce_bidirectional_sync
 
 router = APIRouter()
 sync_manager = SyncManager()
@@ -106,3 +107,12 @@ async def trigger_full_config_sync(allow_duplicates: bool = Query(False, descrip
         raise HTTPException(status_code=500, detail="Orchestrator not initialized.")
     count = await context.orchestrator.sync_all(allow_duplicates=allow_duplicates)
     return {"message": f"Manually synced {count} records from System A to System B."}
+
+
+@router.post("/sqlite-to-salesforce")
+async def api_sqlite_to_salesforce_bidirectional_sync(customer_id: str = Query()):
+    try:
+        sqlite_to_salesforce_bidirectional_sync(customer_id)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
