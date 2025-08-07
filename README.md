@@ -181,3 +181,7 @@ System can be monitored using the /v1/status API or by tailing the logs.
   curl -X POST 'http://localhost:8000/v1/sync/sqlite-to-salesforce?customer_id=customer1'
   curl -X POST 'http://localhost:8000/v1/sync/sqlite-to-salesforce?customer_id=surya'
   ```
+  
+#### Note  
+  - Poller or Reading data from CRM is also accounted for RateLimiting 
+  - Push or Writing data to CRM is also accounted for RateLimiting
