@@ -181,7 +181,24 @@ System can be monitored using the /v1/status API or by tailing the logs.
   curl -X POST 'http://localhost:8000/v1/sync/sqlite-to-salesforce?customer_id=customer1'
   curl -X POST 'http://localhost:8000/v1/sync/sqlite-to-salesforce?customer_id=surya'
   ```
-  
+- How to Insert data into sqlite
+  - Independent [insert_demo_Data.py](app/scripts/insert_demo_data.py) script writes dummy data to data/demo.sqlite
+  - Please run the above script using below command
+    - ``` python3 insert_demo_data.py```
+    
+
+- How to Insert data in Salesforce
+  - Mock Salesforce Push
+    ```
+    curl -X POST http://localhost:8000/v1/crms/mock/salesforce/push \
+      -H "Content-Type: application/json" \
+      -d '{
+            "record_id": 303,
+            "full_name": "Mock303 User",
+            "email_address": "mock@sf.com"
+            "status" : "active"
+          }'
+    ```
 #### Note  
   - Poller or Reading data from CRM is also accounted for RateLimiting 
   - Push or Writing data to CRM is also accounted for RateLimiting
